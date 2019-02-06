@@ -23,42 +23,55 @@ namespace APIMuseos
     {
         static async void leeMuseos()
         {
-            List<Museo> ListaMuseos = new List<Museo>();
-            HttpClient Clientes = new HttpClient();
-            string url = @"https://museowebapp.azurewebsites.net/api/MuseosAPI";
-            var uri = new Uri(url);
-
-            var response = await Clientes.GetAsync(uri);
-            if (response.IsSuccessStatusCode)
+            using (var Clientes = new HttpClient())
             {
-                var content = await response.Content.ReadAsStringAsync();
-                ListaMuseos = JsonConvert.DeserializeObject<List<Museo>>(content);
+                List<Museo> ListaMuseos = new List<Museo>();
+                string url = @"https://museowebapp.azurewebsites.net/api/MuseosAPI";
+                var uri = new Uri(url);
 
-                foreach(var mus in ListaMuseos)
+                var response = await Clientes.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine(mus.Descripcion);
+                    var content = await response.Content.ReadAsStringAsync();
+                    ListaMuseos = JsonConvert.DeserializeObject<List<Museo>>(content);
+
+                    foreach (var mus in ListaMuseos)
+                    {
+                        Console.WriteLine(mus.Descripcion);
+                    }
                 }
             }
         }
 
         static async void leeMuseosVisitas()
         {
-            HttpClient Clientes = new HttpClient();
-            string url = @"https://museowebapp.azurewebsites.net/api/MuseosAPI";
-            var uri = new Uri(url);
-
-            var response = await Clientes.GetAsync(uri);
-            if (response.IsSuccessStatusCode)
+            using (var Clientes = new HttpClient())
             {
-                var content = await response.Content.ReadAsStringAsync();
-                JArray Array = JArray.Parse(content);
-                var visitas = from museo in Array where (campo => campo["visitas"].Equals("S"));
+                string url = @"https://museowebapp.azurewebsites.net/api/MuseosAPI";
+                var uri = new Uri(url);
+
+                var response = await Clientes.GetAsync(uri);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    JArray Array = JArray.Parse(content);
+                    var museosVisitados = from x in Array
+                                  where (string)x["visita"] == "S"
+                                  select x;
+
+                    foreach(JToken mus in museosVisitados)
+                    {
+                        Console.WriteLine(mus.ToString());
+                    }
+                }
+
             }
         }
 
         static void Main (string[] args)
         {
-            leeMuseos();
+            //leeMuseos();
+            leeMuseosVisitas();
             Console.ReadLine();
         }
     }
